@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYTL-Tools v05662aa - 下载页面</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 28px; }
+        .version { color: #666; margin-bottom: 30px; }
+        .version-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: #856404;
+            font-size: 14px;
+        }
+        .package {
+            background: #f7f9fc;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .package:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .package-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .package-title .badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .package-info {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        .package-info strong { color: #333; }
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .download-btn.secondary {
+            background: #f7f9fc;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .download-btn.secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        .comparison {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .comparison h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .comparison table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .comparison th, .comparison td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+        .comparison th {
+            background: #f7f9fc;
+            color: #333;
+        }
+        .comparison td:first-child {
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 GYTL-Tools 部署包</h1>
+        <p class="version">
+            版本: 05662aa
+            <span class="version-tag">最新稳定版</span>
+        </p>
+
+        <div class="alert">
+            ⚠️ <strong>注意：</strong>你之前下载的4.2M文件包含了额外的旧版本部署包，建议下载以下优化版本
+        </div>
+
+        <!-- 推荐：最小化版本 -->
+        <div class="package" style="border-color: #667eea;">
+            <div class="package-title">
+                📦 最小化部署包
+                <span class="badge">推荐</span>
+            </div>
+            <div class="package-info">
+                <p><strong>文件名:</strong> GYTL-Tools-v05662aa-Minimal.tar.gz</p>
+                <p><strong>文件大小:</strong> 188 KB</p>
+                <p><strong>包含:</strong> 核心源代码和运行所需文件（不含文档和旧部署包）</p>
+                <p><strong>适用:</strong> 快速部署、生产环境、文件大小敏感场景</p>
+            </div>
+            <a href="/GYTL-Tools-v05662aa-Minimal.tar.gz" class="download-btn" download="GYTL-Tools-v05662aa-Minimal.tar.gz">
+                ⬇️ 下载最小化版本 (188 KB)
+            </a>
+        </div>
+
+        <!-- 完整版本 -->
+        <div class="package">
+            <div class="package-title">
+                📚 完整部署包
+                <span class="badge">可选</span>
+            </div>
+            <div class="package-info">
+                <p><strong>文件名:</strong> GYTL-Tools-v05662aa-Deploy.tar.gz</p>
+                <p><strong>文件大小:</strong> 1.1 MB</p>
+                <p><strong>包含:</strong> 完整源代码 + 文档 + 部署脚本（不含旧部署包）</p>
+                <p><strong>适用:</strong> 需要查看文档、本地测试、学习研究</p>
+            </div>
+            <a href="/GYTL-Tools-v05662aa-Deploy.tar.gz" class="download-btn secondary" download="GYTL-Tools-v05662aa-Deploy.tar.gz">
+                ⬇️ 下载完整版本 (1.1 MB)
+            </a>
+        </div>
+
+        <!-- 版本对比 -->
+        <div class="comparison">
+            <h3>📊 版本对比</h3>
+            <table>
+                <tr>
+                    <th>项目</th>
+                    <th>最小化版</th>
+                    <th>完整版</th>
+                    <th>旧版 (4.2M)</th>
+                </tr>
+                <tr>
+                    <td>文件大小</td>
+                    <td>188 KB</td>
+                    <td>1.1 MB</td>
+                    <td>4.2 MB</td>
+                </tr>
+                <tr>
+                    <td>核心代码</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td>文档</td>
+                    <td>❌</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td>部署脚本</td>
+                    <td>❌</td>
+                    <td>✅</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td>旧部署包</td>
+                    <td>❌</td>
+                    <td>❌</td>
+                    <td>✅ (3.4MB)</td>
+                </tr>
+                <tr>
+                    <td>适用场景</td>
+                    <td>生产部署</td>
+                    <td>开发测试</td>
+                    <td>不推荐</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+            <p>💡 提示：下载后使用 <code>tar -xzf filename.tar.gz</code> 解压</p>
+        </div>
+    </div>
+</body>
+</html>
