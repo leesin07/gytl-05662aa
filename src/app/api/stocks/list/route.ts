@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const sector = searchParams.get('sector') || ''; // 默认全部市场
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '5000'); // 默认5000条
+    const pageSize = parseInt(searchParams.get('pageSize') || '1000'); // 默认5000条
 
     // 记录请求开始时间
     const requestStartTime = Date.now();
