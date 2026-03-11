@@ -3,6 +3,27 @@ import { EastmoneyResponse, EastmoneyQuote, SectorType, MarketType } from '@/typ
 import { getMockStocks } from '@/lib/stockSelector';
 
 /**
+ * 创建带CORS头部的响应
+ */
+function createCorsResponse(data: any, status: number = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
+/**
+ * 处理OPTIONS请求（CORS预检）
+ */
+export async function OPTIONS() {
+  return createCorsResponse({ success: true }, 200);
+}
+
+/**
  * 获取A股所有股票列表
  * GET /api/stocks/list?sector=main
  */
@@ -11,13 +32,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const sector = searchParams.get('sector') || ''; // 默认全部市场
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '1000'); // 默认5000条
+    // 减少默认返回数量，避免超时
+    const pageSize = parseInt(searchParams.get('pageSize') || '1000'); // 默认1000条
 
     // 记录请求开始时间
     const requestStartTime = Date.now();
 
-    // 东方财富获取股票列表的API
-    const url = 'http://82.push2.eastmoney.com/api/qt/clist/get';
+    // 东方财富获取股票列表的API（使用HTTPS）
+    const url = 'https://82.push2.eastmoney.com/api/qt/clist/get';
     
     const params = new URLSearchParams({
       pn: page.toString(),
@@ -36,19 +58,35 @@ export async function GET(request: NextRequest) {
     let response: Response | null = null;
     let useMockData = false;
     let mockReason = '';
-    
+
+    // 创建超时控制器（8秒超时）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     try {
       response = await fetch(`${url}?${params.toString()}`, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Referer': 'https://quote.eastmoney.com/',
+          'Accept': 'application/json',
         },
+        signal: controller.signal,
         next: { revalidate: 60 }, // 缓存60秒
       });
+
+      clearTimeout(timeoutId);
     } catch (networkError: any) {
-      console.warn('网络请求失败，使用模拟数据:', networkError);
-      useMockData = true;
-      mockReason = `网络连接失败: ${networkError.message || '未知错误'}`;
+      clearTimeout(timeoutId);
+
+      console.error('网络请求失败:', networkError);
+
+      if (networkError.name === 'AbortError') {
+        useMockData = true;
+        mockReason = 'API请求超时（超过8秒），使用模拟数据';
+      } else {
+        useMockData = true;
+        mockReason = `网络连接失败: ${networkError.message || '未知错误'}`;
+      }
     }
 
     if (!useMockData && response && response.ok) {
@@ -62,7 +100,7 @@ export async function GET(request: NextRequest) {
         const responseTime = Date.now() - requestStartTime;
         
         // 真实API响应 - 添加数据来源元数据
-        return NextResponse.json({
+        return createCorsResponse({
           success: true,
           data: {
             stocks: result.data.diff.map(item => transformStockQuote(item)),
@@ -124,7 +162,7 @@ export async function GET(request: NextRequest) {
       }));
 
       // 模拟数据响应 - 添加详细的数据来源元数据
-      return NextResponse.json({
+      return createCorsResponse({
         success: true,
         data: {
           stocks: transformedStocks,
@@ -152,12 +190,12 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('获取股票列表失败:', error);
-    return NextResponse.json(
+    return createCorsResponse(
       {
         error: '获取股票列表失败',
         message: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      500
     );
   }
 }

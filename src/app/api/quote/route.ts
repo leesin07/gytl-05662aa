@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
+ * 创建带CORS头部的响应
+ */
+function createCorsResponse(data: any, status: number = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
+/**
+ * 处理OPTIONS请求（CORS预检）
+ */
+export async function OPTIONS() {
+  return createCorsResponse({ success: true }, 200);
+}
+
+/**
  * 获取股票实时行情
  * GET /api/quote?codes=000001,600519
  */
@@ -10,9 +31,9 @@ export async function GET(request: NextRequest) {
     const codes = searchParams.get('codes');
 
     if (!codes) {
-      return NextResponse.json(
+      return createCorsResponse(
         { error: '股票代码不能为空' },
-        { status: 400 }
+        400
       );
     }
 
@@ -31,24 +52,50 @@ export async function GET(request: NextRequest) {
       })
       .join(',');
 
-    // 调用新浪财经API
-    const url = `http://hq.sinajs.cn/list=${formattedCodes}`;
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    // 调用新浪财经API（使用HTTPS）
+    const url = `https://hq.sinajs.cn/list=${formattedCodes}`;
+
+    // 创建超时控制器（5秒超时）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    let response: Response | null = null;
+
+    try {
+      response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/plain',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+    } catch (networkError: any) {
+      clearTimeout(timeoutId);
+
+      if (networkError.name === 'AbortError') {
+        console.error('获取行情超时:', codes);
+        return createCorsResponse({
+          success: false,
+          error: '获取行情超时',
+          message: 'API请求超时，请稍后重试',
+        }, 500);
+      } else {
+        throw networkError;
       }
-    });
+    }
 
     if (!response.ok) {
       throw new Error('获取行情数据失败');
     }
 
     const text = await response.text();
-    
+
     // 解析新浪API返回的数据
     const quotes = parseSinaQuote(text);
 
-    return NextResponse.json({
+    return createCorsResponse({
       success: true,
       data: quotes,
       timestamp: new Date().toISOString()
@@ -56,12 +103,12 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('获取股票行情失败:', error);
-    return NextResponse.json(
+    return createCorsResponse(
       { 
         error: '获取股票行情失败',
         message: error instanceof Error ? error.message : '未知错误'
       },
-      { status: 500 }
+      500
     );
   }
 }

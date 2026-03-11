@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EastmoneyResponse, EastmoneyQuote } from '@/types/eastmoney';
 
 /**
+ * 创建带CORS头部的响应
+ */
+function createCorsResponse(data: any, status: number = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
+/**
+ * 处理OPTIONS请求（CORS预检）
+ */
+export async function OPTIONS() {
+  return createCorsResponse({ success: true }, 200);
+}
+
+/**
  * 获取股票实时行情（批量）
  * GET /api/stocks/quote?codes=600519,000001,002594
  */
@@ -11,9 +32,9 @@ export async function GET(request: NextRequest) {
     const codes = searchParams.get('codes');
 
     if (!codes) {
-      return NextResponse.json(
+      return createCorsResponse(
         { error: '股票代码不能为空' },
-        { status: 400 }
+        400
       );
     }
 
@@ -30,9 +51,9 @@ export async function GET(request: NextRequest) {
       }
     }).join(',');
 
-    // 东方财富实时行情API
-    const url = 'http://push2.eastmoney.com/api/qt/ulist.np/get';
-    
+    // 东方财富实时行情API（使用HTTPS）
+    const url = 'https://push2.eastmoney.com/api/qt/ulist.np/get';
+
     const params = new URLSearchParams({
       fltt: '2',
       invt: '2',
@@ -41,13 +62,38 @@ export async function GET(request: NextRequest) {
       _: Date.now().toString(),
     });
 
-    const response = await fetch(`${url}?${params.toString()}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://quote.eastmoney.com/',
-      },
-      // 实时数据不缓存
-    });
+    // 创建超时控制器（5秒超时）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    let response: Response | null = null;
+
+    try {
+      response = await fetch(`${url}?${params.toString()}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Referer': 'https://quote.eastmoney.com/',
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+        // 实时数据不缓存
+      });
+
+      clearTimeout(timeoutId);
+    } catch (networkError: any) {
+      clearTimeout(timeoutId);
+
+      if (networkError.name === 'AbortError') {
+        console.error('获取实时行情超时:', codes);
+        return createCorsResponse({
+          success: false,
+          error: '获取实时行情超时',
+          message: 'API请求超时，请稍后重试',
+        }, 500);
+      } else {
+        throw networkError;
+      }
+    }
 
     if (!response.ok) {
       throw new Error('获取实时行情失败');
@@ -59,7 +105,7 @@ export async function GET(request: NextRequest) {
       throw new Error(`API返回错误: ${result.rc}`);
     }
 
-    return NextResponse.json({
+    return createCorsResponse({
       success: true,
       data: {
         quotes: result.data.diff.map(item => transformQuote(item)),
@@ -70,12 +116,12 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('获取实时行情失败:', error);
-    return NextResponse.json(
+    return createCorsResponse(
       {
         error: '获取实时行情失败',
         message: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      500
     );
   }
 }
